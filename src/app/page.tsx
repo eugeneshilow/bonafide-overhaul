@@ -7,11 +7,13 @@ import {
   Heart,
   Menu,
   Minus,
+  Moon,
   Plus,
   Search,
   ShoppingBag,
   SlidersHorizontal,
   Star,
+  Sun,
   Truck,
   User,
   X,
@@ -33,6 +35,8 @@ type CartLine = {
   quantity: number;
 };
 
+type Theme = "light" | "dark";
+
 const navItems = ["Новинки", "Леггинсы", "Топы", "Комплекты", "Коллекции", "Sale"];
 const colorDrops = [
   { name: "Black Skin", color: "#111111" },
@@ -47,6 +51,7 @@ export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedSize, setSelectedSize] = useState("M");
   const [cartLines, setCartLines] = useState<CartLine[]>([]);
+  const [theme, setTheme] = useState<Theme>("light");
 
   const heroProduct = products[0];
 
@@ -58,6 +63,14 @@ export default function Home() {
       ),
     [cartLines],
   );
+
+  function toggleTheme() {
+    setTheme((currentTheme) => {
+      const nextTheme = currentTheme === "dark" ? "light" : "dark";
+      window.localStorage.setItem("bonafide-theme", nextTheme);
+      return nextTheme;
+    });
+  }
 
   function addToCart(product: Product, size = "M") {
     setCartLines((lines) => {
@@ -91,17 +104,19 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-white text-neutral-950">
+    <main className="site-shell min-h-screen" data-theme={theme}>
       <TopBar />
       <Header
         cartCount={cartLines.reduce((total, line) => total + line.quantity, 0)}
         mobileMenuOpen={mobileMenuOpen}
         onCartOpen={() => setCartOpen(true)}
         onMobileMenuToggle={() => setMobileMenuOpen((open) => !open)}
+        onThemeToggle={toggleTheme}
+        theme={theme}
       />
 
       {mobileMenuOpen && (
-        <div className="border-b border-neutral-200 bg-white px-5 py-4 md:hidden">
+        <div className="mobile-menu-panel border-b px-5 py-4 md:hidden">
           <nav className="grid gap-3 text-lg font-bold">
             {navItems.map((item) => (
               <a href="#shop" key={item} onClick={() => setMobileMenuOpen(false)}>
@@ -138,7 +153,7 @@ export default function Home() {
 
 function TopBar() {
   return (
-    <div className="flex min-h-10 items-center justify-center bg-black px-4 text-center text-sm font-semibold text-white">
+    <div className="top-bar flex min-h-10 items-center justify-center px-4 text-center text-sm font-semibold">
       Бесплатная доставка от 5 000 ₽ · 1000 бонусов за регистрацию
     </div>
   );
@@ -149,18 +164,22 @@ function Header({
   mobileMenuOpen,
   onCartOpen,
   onMobileMenuToggle,
+  onThemeToggle,
+  theme,
 }: {
   cartCount: number;
   mobileMenuOpen: boolean;
   onCartOpen: () => void;
   onMobileMenuToggle: () => void;
+  onThemeToggle: () => void;
+  theme: Theme;
 }) {
   return (
-    <header className="sticky top-0 z-40 border-b border-neutral-200 bg-white/95 backdrop-blur">
+    <header className="site-header sticky top-0 z-40 border-b backdrop-blur">
       <div className="mx-auto grid h-20 max-w-[1600px] grid-cols-[auto_1fr_auto] items-center gap-4 px-4 sm:px-6 lg:px-8">
         <button
           aria-label={mobileMenuOpen ? "Закрыть меню" : "Открыть меню"}
-          className="flex size-11 items-center justify-center border border-neutral-200 md:hidden"
+          className="header-icon-button flex size-11 items-center justify-center md:hidden"
           onClick={onMobileMenuToggle}
           type="button"
         >
@@ -174,7 +193,7 @@ function Header({
         >
           <Image
             alt="Bona Fide"
-            className="h-10 w-auto sm:h-12"
+            className="brand-logo h-10 w-auto sm:h-12"
             height={128}
             priority
             src="/brand/bonafide-logo.png"
@@ -184,7 +203,7 @@ function Header({
 
         <nav className="hidden justify-center gap-9 text-base font-bold md:flex">
           {navItems.map((item) => (
-            <a className="transition hover:text-pink-600" href="#shop" key={item}>
+            <a className="nav-link transition" href="#shop" key={item}>
               {item}
             </a>
           ))}
@@ -193,11 +212,24 @@ function Header({
         <div className="flex items-center justify-end gap-2">
           <button
             aria-label="Поиск"
-            className="hidden h-11 items-center gap-2 border border-neutral-200 px-4 text-sm font-semibold text-neutral-600 transition hover:border-neutral-950 md:flex"
+            className="header-search-button hidden h-11 items-center gap-2 px-4 text-sm font-semibold transition md:flex"
             type="button"
           >
             <Search size={18} />
             <span>Поиск</span>
+          </button>
+          <button
+            aria-label={
+              theme === "dark" ? "Включить светлую тему" : "Включить темную тему"
+            }
+            className="theme-toggle inline-flex h-11 items-center gap-2 px-3 text-sm font-black transition"
+            onClick={onThemeToggle}
+            type="button"
+          >
+            {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+            <span className="hidden lg:inline">
+              {theme === "dark" ? "Light" : "Dark"}
+            </span>
           </button>
           <IconButton label="Аккаунт">
             <User size={20} />
@@ -207,7 +239,7 @@ function Header({
           </IconButton>
           <button
             aria-label="Корзина"
-            className="relative flex size-11 items-center justify-center border border-neutral-950 bg-neutral-950 text-white transition hover:bg-pink-600"
+            className="cart-button relative flex size-11 items-center justify-center transition"
             onClick={onCartOpen}
             type="button"
           >
@@ -234,7 +266,7 @@ function IconButton({
   return (
     <button
       aria-label={label}
-      className="hidden size-11 items-center justify-center border border-neutral-200 transition hover:border-neutral-950 sm:flex"
+      className="header-icon-button hidden size-11 items-center justify-center transition sm:flex"
       type="button"
     >
       {children}
@@ -244,7 +276,7 @@ function IconButton({
 
 function Hero({ onPrimary }: { onPrimary: () => void }) {
   return (
-    <section className="relative min-h-[76vh] overflow-hidden bg-black text-white">
+    <section className="hero-section relative min-h-[76vh] overflow-hidden text-white">
       <div className="absolute inset-0 grid grid-cols-1 sm:grid-cols-3">
         {heroImages.map((image, index) => (
           <div
@@ -258,11 +290,11 @@ function Hero({ onPrimary }: { onPrimary: () => void }) {
           />
         ))}
       </div>
-      <div className="absolute inset-0 bg-black/40" />
+      <div className="hero-vignette absolute inset-0" />
 
       <div className="relative z-10 mx-auto flex min-h-[76vh] max-w-[1600px] flex-col justify-end px-5 pb-10 pt-24 sm:px-8 lg:px-12">
         <div className="max-w-4xl">
-          <p className="mb-4 text-base font-black uppercase text-pink-400">
+          <p className="neon-kicker mb-4 text-base font-black uppercase">
             Summer Studio Edit
           </p>
           <h1 className="max-w-5xl text-6xl font-black leading-none sm:text-8xl lg:text-9xl">
@@ -274,7 +306,7 @@ function Hero({ onPrimary }: { onPrimary: () => void }) {
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <button
-              className="inline-flex h-12 items-center gap-2 bg-white px-6 text-base font-black text-neutral-950 transition hover:bg-pink-500 hover:text-white"
+              className="primary-cta inline-flex h-12 items-center gap-2 px-6 text-base font-black transition"
               onClick={onPrimary}
               type="button"
             >
@@ -282,7 +314,7 @@ function Hero({ onPrimary }: { onPrimary: () => void }) {
               <ArrowRight size={19} />
             </button>
             <a
-              className="inline-flex h-12 items-center border border-white px-6 text-base font-black text-white transition hover:bg-white hover:text-neutral-950"
+              className="ghost-cta inline-flex h-12 items-center border px-6 text-base font-black transition"
               href="#spotlight"
             >
               Собрать комплект
@@ -290,12 +322,12 @@ function Hero({ onPrimary }: { onPrimary: () => void }) {
           </div>
         </div>
 
-        <div className="mt-10 hidden max-w-3xl grid-cols-3 border border-white/35 text-sm font-bold md:grid">
-          <div className="border-r border-white/35 p-4">
+        <div className="hero-stat-grid mt-10 hidden max-w-3xl grid-cols-3 border text-sm font-bold md:grid">
+          <div className="hero-stat-cell border-r p-4">
             Push-Up fit
             <span className="mt-1 block text-white/65">скульптурная посадка</span>
           </div>
-          <div className="border-r border-white/35 p-4">
+          <div className="hero-stat-cell border-r p-4">
             Drop colors
             <span className="mt-1 block text-white/65">black, pink, cloud</span>
           </div>
@@ -311,11 +343,11 @@ function Hero({ onPrimary }: { onPrimary: () => void }) {
 
 function CategoryRail() {
   return (
-    <section className="border-b border-neutral-200 bg-white py-10">
+    <section className="section-shell border-b py-10">
       <div className="mx-auto max-w-[1600px] px-5 sm:px-8 lg:px-12">
         <div className="mb-6 flex items-end justify-between gap-4">
           <div>
-            <p className="mb-2 text-sm font-black uppercase text-pink-600">
+            <p className="accent-text mb-2 text-sm font-black uppercase">
               Shop the look
             </p>
             <h2 className="text-3xl font-black sm:text-5xl">Категории без шума</h2>
@@ -327,7 +359,7 @@ function CategoryRail() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {categories.map((category) => (
             <a
-              className="group relative min-h-[360px] overflow-hidden bg-neutral-100"
+              className="category-card group relative min-h-[360px] overflow-hidden"
               href="#shop"
               key={category.name}
             >
@@ -352,23 +384,23 @@ function CategoryRail() {
 
 function CampaignGrid() {
   return (
-    <section className="bg-neutral-950 py-12 text-white">
+    <section className="campaign-section py-12 text-white">
       <div className="mx-auto grid max-w-[1600px] gap-4 px-5 sm:px-8 lg:grid-cols-[1.2fr_0.8fr] lg:px-12">
-        <article className="relative min-h-[520px] overflow-hidden bg-neutral-900">
+        <article className="campaign-card neon-frame relative min-h-[520px] overflow-hidden">
           <div
             className="absolute inset-0 bg-cover bg-center"
             style={{ backgroundImage: `url("${campaignImages.neon}")` }}
           />
           <div className="absolute inset-0 bg-black/28" />
           <div className="absolute bottom-0 left-0 max-w-xl p-6 sm:p-8">
-            <p className="mb-3 text-sm font-black uppercase text-pink-400">
+            <p className="neon-kicker mb-3 text-sm font-black uppercase">
               Neon Pink drop
             </p>
             <h2 className="text-5xl font-black leading-none sm:text-7xl">
               Цвет, который не просит разрешения.
             </h2>
             <a
-              className="mt-6 inline-flex h-11 items-center gap-2 bg-white px-5 font-black text-neutral-950"
+              className="primary-cta mt-6 inline-flex h-11 items-center gap-2 px-5 font-black"
               href="#shop"
             >
               Смотреть дроп
@@ -378,7 +410,7 @@ function CampaignGrid() {
         </article>
 
         <div className="grid gap-4">
-          <article className="relative min-h-[250px] overflow-hidden bg-neutral-900">
+          <article className="campaign-card relative min-h-[250px] overflow-hidden">
             <div
               className="absolute inset-0 bg-cover bg-center"
               style={{ backgroundImage: `url("${campaignImages.street}")` }}
@@ -391,7 +423,7 @@ function CampaignGrid() {
               <h3 className="mt-1 text-3xl font-black">Комбинезоны на каждый день</h3>
             </div>
           </article>
-          <article className="relative min-h-[250px] overflow-hidden bg-neutral-900">
+          <article className="campaign-card relative min-h-[250px] overflow-hidden">
             <div
               className="absolute inset-0 bg-cover bg-center"
               style={{ backgroundImage: `url("${campaignImages.summer}")` }}
@@ -412,21 +444,21 @@ function CampaignGrid() {
 
 function ProductGrid({ onAdd }: { onAdd: (product: Product) => void }) {
   return (
-    <section className="bg-white py-12" id="shop">
+    <section className="section-shell py-12" id="shop">
       <div className="mx-auto max-w-[1600px] px-5 sm:px-8 lg:px-12">
         <div className="mb-8 flex flex-col justify-between gap-5 md:flex-row md:items-end">
           <div>
-            <p className="mb-2 text-sm font-black uppercase text-pink-600">
+            <p className="accent-text mb-2 text-sm font-black uppercase">
               New this week
             </p>
             <h2 className="text-4xl font-black sm:text-6xl">Новинки и хиты</h2>
           </div>
           <div className="flex flex-wrap gap-3">
-            <button className="inline-flex h-11 items-center gap-2 border border-neutral-300 px-4 font-bold">
+            <button className="control-button inline-flex h-11 items-center gap-2 px-4 font-bold">
               <SlidersHorizontal size={18} />
               Фильтр
             </button>
-            <button className="inline-flex h-11 items-center gap-2 border border-neutral-300 px-4 font-bold">
+            <button className="control-button inline-flex h-11 items-center gap-2 px-4 font-bold">
               По популярности
               <ChevronDown size={18} />
             </button>
@@ -445,16 +477,16 @@ function ProductGrid({ onAdd }: { onAdd: (product: Product) => void }) {
 
 function ColorStory() {
   return (
-    <section className="border-t border-neutral-200 bg-white py-12">
+    <section className="section-shell border-t py-12">
       <div className="mx-auto grid max-w-[1600px] gap-8 px-5 sm:px-8 lg:grid-cols-[0.8fr_1.2fr] lg:px-12">
         <div>
-          <p className="mb-2 text-sm font-black uppercase text-pink-600">
+          <p className="accent-text mb-2 text-sm font-black uppercase">
             Shop by color
           </p>
           <h2 className="text-4xl font-black leading-none sm:text-6xl">
             Выбирай цвет. Собирай образ.
           </h2>
-          <p className="mt-4 max-w-lg text-base font-medium leading-7 text-neutral-600">
+          <p className="muted-text mt-4 max-w-lg text-base font-medium leading-7">
             От базового Black Skin до Candy Pink: дропы Bona Fide строятся вокруг
             цвета, посадки и готовых комплектов.
           </p>
@@ -462,12 +494,12 @@ function ColorStory() {
         <div className="grid gap-3 sm:grid-cols-5">
           {colorDrops.map((drop) => (
             <a
-              className="group flex min-h-[240px] flex-col justify-between border border-neutral-200 bg-neutral-50 p-4 transition hover:border-neutral-950"
+              className="color-card group flex min-h-[240px] flex-col justify-between p-4 transition"
               href="#shop"
               key={drop.name}
             >
               <span
-                className="block h-28 w-full border border-black/10"
+                className="color-swatch block h-28 w-full border"
                 style={{ backgroundColor: drop.color }}
               />
               <span className="mt-4 flex items-center justify-between gap-3 font-black">
@@ -493,27 +525,27 @@ function ProductCard({
   product: Product;
 }) {
   return (
-    <article className="group">
-      <div className="relative aspect-[4/5] overflow-hidden bg-neutral-100">
+    <article className="product-card group">
+      <div className="product-media relative aspect-[4/5] overflow-hidden">
         <div
           className="absolute inset-0 bg-cover bg-center transition duration-500 group-hover:scale-105"
           style={{ backgroundImage: `url("${product.image}")` }}
         />
         <button
           aria-label="Добавить в избранное"
-          className="absolute right-3 top-3 flex size-10 items-center justify-center bg-white text-neutral-950 shadow-sm transition hover:text-pink-600"
+          className="product-icon-button absolute right-3 top-3 flex size-10 items-center justify-center shadow-sm transition"
           type="button"
         >
           <Heart size={19} />
         </button>
         {product.badge && (
-          <span className="absolute left-3 top-3 bg-white px-3 py-2 text-xs font-black uppercase">
+          <span className="product-badge absolute left-3 top-3 px-3 py-2 text-xs font-black uppercase">
             {product.badge}
           </span>
         )}
         <div className="absolute inset-x-3 bottom-3 translate-y-3 opacity-0 transition group-hover:translate-y-0 group-hover:opacity-100">
           <button
-            className="flex h-12 w-full items-center justify-center gap-2 bg-neutral-950 font-black text-white transition hover:bg-pink-600"
+            className="quick-add-button flex h-12 w-full items-center justify-center gap-2 font-black transition"
             onClick={() => onAdd(product)}
             type="button"
           >
@@ -526,18 +558,18 @@ function ProductCard({
         <div className="flex justify-between gap-3">
           <div>
             <p className="font-black">{product.name}</p>
-            <p className="mt-1 text-sm font-medium text-neutral-500">
+            <p className="muted-text mt-1 text-sm font-medium">
               {product.category} · {product.color}
             </p>
           </div>
-          <p className="whitespace-nowrap text-sm font-bold text-pink-600">
+          <p className="accent-text whitespace-nowrap text-sm font-bold">
             + {product.bonus} бонусов
           </p>
         </div>
         <div className="mt-3 flex items-center gap-3">
           <span className="text-xl font-black">{formatPrice(product.price)}</span>
           {product.oldPrice && (
-            <span className="font-semibold text-neutral-400 line-through">
+            <span className="muted-text font-semibold line-through">
               {formatPrice(product.oldPrice)}
             </span>
           )}
@@ -559,14 +591,14 @@ function ProductSpotlight({
   selectedSize: string;
 }) {
   return (
-    <section className="border-y border-neutral-200 bg-[#f4f4f1] py-12" id="spotlight">
+    <section className="spotlight-section border-y py-12" id="spotlight">
       <div className="mx-auto grid max-w-[1600px] gap-8 px-5 sm:px-8 lg:grid-cols-[1.1fr_0.9fr] lg:px-12">
         <div className="grid gap-4 sm:grid-cols-2">
           {[product.image, heroImages[1], heroImages[2], products[5].image].map(
             (image, index) => (
               <div
                 className={[
-                  "min-h-[420px] bg-neutral-200 bg-cover bg-center",
+                  "spotlight-media min-h-[420px] bg-cover bg-center",
                   index === 0 ? "sm:row-span-2 sm:min-h-[860px]" : "",
                 ].join(" ")}
                 key={`${image}-${index}`}
@@ -576,14 +608,14 @@ function ProductSpotlight({
           )}
         </div>
 
-        <aside className="self-start bg-white p-6 shadow-sm sm:p-8 lg:sticky lg:top-28">
-          <p className="mb-3 text-sm font-black uppercase text-pink-600">
+        <aside className="spotlight-panel self-start p-6 shadow-sm sm:p-8 lg:sticky lg:top-28">
+          <p className="accent-text mb-3 text-sm font-black uppercase">
             Product focus
           </p>
           <h2 className="text-4xl font-black leading-none sm:text-6xl">
             {product.name}
           </h2>
-          <p className="mt-4 max-w-xl text-base leading-7 text-neutral-600">
+          <p className="muted-text mt-4 max-w-xl text-base leading-7">
             Фирменная посадка Bona Fide: высокая талия, акцент на силуэт,
             плотная поддержка и визуально чистая линия комплекта.
           </p>
@@ -591,7 +623,7 @@ function ProductSpotlight({
           <div className="mt-6 flex items-end gap-3">
             <span className="text-3xl font-black">{formatPrice(product.price)}</span>
             {product.oldPrice && (
-              <span className="pb-1 text-lg font-semibold text-neutral-400 line-through">
+              <span className="muted-text pb-1 text-lg font-semibold line-through">
                 {formatPrice(product.oldPrice)}
               </span>
             )}
@@ -610,8 +642,8 @@ function ProductSpotlight({
                   className={[
                     "h-12 border text-base font-black transition",
                     selectedSize === size
-                      ? "border-neutral-950 bg-neutral-950 text-white"
-                      : "border-neutral-300 bg-white hover:border-neutral-950",
+                      ? "size-button-active"
+                      : "size-button",
                   ].join(" ")}
                   key={size}
                   onClick={() => onSizeChange(size)}
@@ -624,7 +656,7 @@ function ProductSpotlight({
           </div>
 
           <button
-            className="mt-6 flex h-14 w-full items-center justify-center gap-2 bg-neutral-950 text-base font-black text-white transition hover:bg-pink-600"
+            className="primary-action mt-6 flex h-14 w-full items-center justify-center gap-2 text-base font-black transition"
             onClick={onAdd}
             type="button"
           >
@@ -632,7 +664,7 @@ function ProductSpotlight({
             Добавить в корзину
           </button>
 
-          <div className="mt-6 grid gap-3 border-t border-neutral-200 pt-5 text-sm font-semibold">
+          <div className="info-stack mt-6 grid gap-3 border-t pt-5 text-sm font-semibold">
             <div className="flex items-center gap-3">
               <Truck size={20} />
               Доставка бесплатно от 5 000 ₽
@@ -650,10 +682,10 @@ function ProductSpotlight({
 
 function EditorialFooter() {
   return (
-    <footer className="bg-neutral-950 px-5 py-12 text-white sm:px-8 lg:px-12">
+    <footer className="editorial-footer px-5 py-12 text-white sm:px-8 lg:px-12">
       <div className="mx-auto grid max-w-[1600px] gap-8 lg:grid-cols-[1fr_1fr]">
         <div>
-          <p className="mb-3 text-sm font-black uppercase text-pink-400">
+          <p className="neon-kicker mb-3 text-sm font-black uppercase">
             Bona Fide DNA
           </p>
           <h2 className="max-w-3xl text-5xl font-black leading-none sm:text-7xl">
@@ -667,8 +699,8 @@ function EditorialFooter() {
             ["Drop", "лимитированные цвета и регулярные обновления"],
             ["30%", "бонусами можно оплатить часть покупки"],
           ].map(([title, text]) => (
-            <div className="border border-white/20 p-5" key={title}>
-              <p className="text-4xl font-black text-pink-400">{title}</p>
+            <div className="footer-metric p-5" key={title}>
+              <p className="neon-text text-4xl font-black">{title}</p>
               <p className="mt-2 text-sm font-semibold leading-6 text-white/75">
                 {text}
               </p>
@@ -705,15 +737,15 @@ function CartDrawer({
         onClick={onClose}
         type="button"
       />
-      <aside className="absolute right-0 top-0 flex h-full w-full max-w-md flex-col bg-white shadow-2xl">
-        <div className="flex h-20 items-center justify-between border-b border-neutral-200 px-5">
+      <aside className="cart-panel absolute right-0 top-0 flex h-full w-full max-w-md flex-col shadow-2xl">
+        <div className="cart-panel-header flex h-20 items-center justify-between border-b px-5">
           <div>
-            <p className="text-sm font-bold text-neutral-500">Bona Fide</p>
+            <p className="muted-text text-sm font-bold">Bona Fide</p>
             <h2 className="text-2xl font-black">Корзина</h2>
           </div>
           <button
             aria-label="Закрыть"
-            className="flex size-11 items-center justify-center border border-neutral-200"
+            className="header-icon-button flex size-11 items-center justify-center"
             onClick={onClose}
             type="button"
           >
@@ -726,7 +758,7 @@ function CartDrawer({
             <div className="flex h-full flex-col items-center justify-center text-center">
               <ShoppingBag size={42} />
               <p className="mt-4 text-xl font-black">Корзина пока пустая</p>
-              <p className="mt-2 text-sm text-neutral-500">
+              <p className="muted-text mt-2 text-sm">
                 Добавь новинки или собери комплект из product focus.
               </p>
             </div>
@@ -738,17 +770,17 @@ function CartDrawer({
                   key={`${line.product.id}-${line.size}`}
                 >
                   <div
-                    className="aspect-square bg-neutral-100 bg-cover bg-center"
+                    className="cart-thumb aspect-square bg-cover bg-center"
                     style={{ backgroundImage: `url("${line.product.image}")` }}
                   />
                   <div>
                     <p className="font-black">{line.product.name}</p>
-                    <p className="mt-1 text-sm font-medium text-neutral-500">
+                    <p className="muted-text mt-1 text-sm font-medium">
                       {line.product.category} · {line.product.color} · {line.size}
                     </p>
                     <div className="mt-3 flex items-center justify-between">
                       <p className="font-black">{formatPrice(line.product.price)}</p>
-                      <div className="flex items-center border border-neutral-200">
+                      <div className="quantity-control flex items-center border">
                         <button
                           aria-label="Уменьшить количество"
                           className="flex size-9 items-center justify-center"
@@ -781,12 +813,12 @@ function CartDrawer({
           )}
         </div>
 
-        <div className="border-t border-neutral-200 p-5">
+        <div className="cart-panel-footer border-t p-5">
           <div className="mb-4 flex items-center justify-between text-lg font-black">
             <span>Итого</span>
             <span>{formatPrice(subtotal)}</span>
           </div>
-          <button className="h-14 w-full bg-neutral-950 text-base font-black text-white transition hover:bg-pink-600">
+          <button className="primary-action h-14 w-full text-base font-black transition">
             Оформить заказ
           </button>
         </div>
