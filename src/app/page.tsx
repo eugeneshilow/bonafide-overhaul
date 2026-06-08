@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import {
   ArrowRight,
   ChevronDown,
@@ -166,8 +167,19 @@ function Header({
           {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
 
-        <a className="text-2xl font-black uppercase" href="#">
-          Bona Fide
+        <a
+          aria-label="Bona Fide"
+          className="flex items-center"
+          href="#"
+        >
+          <Image
+            alt="Bona Fide"
+            className="h-10 w-auto sm:h-12"
+            height={128}
+            priority
+            src="/brand/bonafide-logo.png"
+            width={394}
+          />
         </a>
 
         <nav className="hidden justify-center gap-9 text-base font-bold md:flex">
